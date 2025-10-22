@@ -1,0 +1,39 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.1.4'
+    id 'io.spring.dependency-management' version '1.1.3'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot Web para crear la API REST
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Data JPA para manejar la base de datos
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Validación de datos
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Base de datos H2 en memoria
+    runtimeOnly 'com.h2database:h2'
+
+    // Lombok para generar getters, setters y constructores automáticamente
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // Dependencias para tests
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+// Configuración para usar JUnit 5
+tasks.named('test') {
+    useJUnitPlatform()
+}
