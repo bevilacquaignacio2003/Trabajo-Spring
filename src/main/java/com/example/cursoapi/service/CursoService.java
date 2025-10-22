@@ -2,8 +2,11 @@ package com.example.cursoapi.service;
 
 import com.example.cursoapi.model.Curso;
 import com.example.cursoapi.model.Estudiante;
+import com.example.cursoapi.model.Profesor;
 import com.example.cursoapi.repository.CursoRepository;
 import com.example.cursoapi.repository.EstudianteRepository;
+import com.example.cursoapi.repository.ProfesorRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,42 +15,49 @@ import java.util.Optional;
 @Service
 public class CursoService {
 
-    private final CursoRepository cursoRepository;
-    private final EstudianteRepository estudianteRepository;
+    @Autowired
+    private CursoRepository cursoRepository;
 
-    public CursoService(CursoRepository cursoRepository, EstudianteRepository estudianteRepository) {
-        this.cursoRepository = cursoRepository;
-        this.estudianteRepository = estudianteRepository;
-    }
+    @Autowired
+    private ProfesorRepository profesorRepository;
 
+    @Autowired
+    private EstudianteRepository estudianteRepository;
+
+    // Listar todos los cursos
     public List<Curso> listarCursos() {
         return cursoRepository.findAll();
     }
 
-    public Curso guardarCurso(Curso curso) {
+    // Crear un curso con su profesor
+    public Curso crearCurso(Curso curso) {
+        if (curso.getProfesor() != null) {
+            Optional<Profesor> prof = profesorRepository.findById(curso.getProfesor().getId());
+            prof.ifPresent(curso::setProfesor);
+        }
         return cursoRepository.save(curso);
     }
 
-    public Curso asignarEstudiante(Long cursoId, Long estudianteId) {
+    // Asignar un estudiante a un curso
+    public Curso asignarEstudianteACurso(Long cursoId, Long estudianteId) {
         Optional<Curso> cursoOpt = cursoRepository.findById(cursoId);
         Optional<Estudiante> estudianteOpt = estudianteRepository.findById(estudianteId);
 
-        if(cursoOpt.isPresent() && estudianteOpt.isPresent()) {
+        if (cursoOpt.isPresent() && estudianteOpt.isPresent()) {
             Curso curso = cursoOpt.get();
             Estudiante estudiante = estudianteOpt.get();
             curso.getEstudiantes().add(estudiante);
-            estudiante.getCursos().add(curso);
-
-            estudianteRepository.save(estudiante);
             return cursoRepository.save(curso);
-        } else {
-            throw new RuntimeException("Curso o Estudiante no encontrado");
         }
+        return null;
     }
 
-    public List<Curso> cursosDeEstudiante(Long estudianteId) {
-        return estudianteRepository.findById(estudianteId)
-                .map(est -> List.copyOf(est.getCursos()))
-                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
+    // Obtener cursos de un estudiante
+    public List<Curso> obtenerCursosDeEstudiante(Long estudianteId) {
+        Optional<Estudiante> estudianteOpt = estudianteRepository.findById(estudianteId);
+        if (estudianteOpt.isPresent()) {
+            return cursoRepository.findByEstudiantesContaining(estudianteOpt.get());
+        }
+        return List.of();
     }
 }
